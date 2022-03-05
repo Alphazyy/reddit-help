@@ -1,0 +1,177 @@
+#include <NewPing.h>
+#include <LCD_I2C.h>
+#define SONAR_NUM 4
+#define MAX_DISTANCE 10
+#define PING_INTERVAL 33
+#define endereco  0x27 
+#define colunas   16
+#define linhas    2
+
+unsigned long pingTimer [SONAR_NUM];
+
+unsigned int cm [SONAR_NUM];
+uint8_t currentSensor = 0;
+
+int Pinoledverde1 = 10;
+int Pinoledverm1 = 10;
+int Pinoledverde2 = 9;
+int Pinoledverm2 = 9;
+int Pinoledverde3 = 5;
+int Pinledverm3 = 5;
+int Pinoledverde4 = 2;
+int Pinoledverm4 = 2;
+int VagasLivres = 4;
+int VagasOcupadas = 0;
+int sensor1 = 0;
+int sensor2 = 0;
+int sensor3 = 0;
+int sensor4 = 0;
+
+LCD_I2C lcd(endereco, colunas, linhas);
+
+//Calcula a quantidade de vagas disponiveis e ocupadas, e imprime no display  
+ int vagasocupadas = sensor1 + sensor2 + sensor3 + sensor4;  
+ int vagaslivres = 4 - VagasOcupadas;  
+
+NewPing sonar[SONAR_NUM] =   
+{   
+  // Armazena informacoes sobre a pinagem dos sensores  
+  // Pino trigger, echo e distancia máxima, para cada sensor 
+NewPing(13, 12, MAX_DISTANCE),
+NewPing(22, 23, MAX_DISTANCE),
+NewPing(24, 25, MAX_DISTANCE),
+NewPing(50, 51, MAX_DISTANCE),
+};
+
+
+
+
+
+
+
+
+void setup() 
+{
+  Serial.begin(9600);  
+  lcd.begin(); //Inicializa LCD  
+  lcd.clear();   //Limpa o LCD  
+  pingTimer[0] = millis() + 75;      //Primeira medicao começa com 75ms  
+  //Define o tempo de inicializacao de cada sensor
+  for (uint8_t i = 1; i < SONAR_NUM; i++)   
+   pingTimer[i] = pingTimer[i - 1] + PING_INTERVAL;  
+  pinMode(Pinoledverm1, OUTPUT);  //Define o Pino vermelho do led1 como saida  
+  pinMode(Pinoledverde1, OUTPUT); //Define o Pino verde do led1 como saida  
+  pinMode(Pinoledverm2, OUTPUT);  //Define o Pino vermelho do led2 como saida  
+  pinMode(Pinoledverde2, OUTPUT); //Define o Pino verde do led2 como saida
+  pinMode(Pinledverm3, OUTPUT);  //Define o Pino vermelho do led3 como saida
+  pinMode(Pinoledverde3, OUTPUT); //Define o Pino verde do led3 como sainda
+  pinMode(Pinoledverm4, OUTPUT);  //Define o pino vermelho do led4 como saida
+  pinMode(Pinoledverde4, OUTPUT); //Define o pino verde do led4 como saida
+
+}
+
+
+void loop() 
+{
+  // Loop entre todos os sensores 
+  for (uint8_t i = 0; i < SONAR_NUM; i++) {  
+   if (millis() >= pingTimer[i]) {
+    //Define o tempo que o proximo sensor sera acionado
+    pingTimer[i] += PING_INTERVAL * SONAR_NUM;   
+    // Ciclo do sensor completo  
+    if (i == 0 && currentSensor == SONAR_NUM - 1) void oneSensorCycle(); 
+    // Reseta o timer antes de ler o proximo sensor  
+    sonar[currentSensor].timer_stop();     
+    // Número do sensor sendo acionado
+    currentSensor = i;               
+    // Se nao houver eco do sensor, seta a distância como zero   
+    cm[currentSensor] = 0;           
+    sonar[currentSensor].ping_timer(echoCheck);  
+   }  
+ }  
+    
+ 
+ lcd.setCursor(0,0);  
+ lcd.print("Vagas livres = ");  
+ lcd.print(vagaslivres);  
+ lcd.setCursor(0,1);  
+ lcd.print("Vagas ocup. = ");  
+ lcd.print(vagasocupadas);  
+}  
+   
+void echoCheck()  //Se receber um sinal (eco), calcula a distancia  
+  if (sonar[currentSensor].check_timer())  
+   cm[currentSensor] = sonar[currentSensor].ping_result / US_ROUNDTRIP_CM;  
+ }  
+   
+void oneSensorCycle()  // Ciclo de leitura do sensor  
+  for (uint8_t i = 0; i < SONAR_NUM; i++) {  
+   //Se for detectado objeto entre 0 e 50 cm do sensor1, acende o led1 vermelho
+   if (cm[0] > 1 && cm[0] < 50)   
+   {  
+     digitalWrite(Pinoledverm1, 1);  
+     digitalWrite(Pinoledverde1, 0);  
+     sensor1 = 1; //Incrementa o número de vagas ocupadas na vaga1  
+   }  
+   else //Se não for detectado objeto no sensor 1, mantém o led1 verde aceso  
+   {  
+     digitalWrite(Pinoledverm1, 0);  
+     digitalWrite(Pinoledverde1, 1);  
+     sensor1 = 0; //Marca a vaga 1 como livre  
+   }   
+   
+   //Se for detectado objeto entre 0 e 50 cm do sensor2, acende o led2 vermelho  
+   if (cm[1] > 1 && cm[1] < 50) 
+   {  
+     digitalWrite(Pinoledverm2, 1);  
+     digitalWrite(Pinoledverde2, 0);  
+     sensor2 = 1; //Incrementa o número de vagas ocupadas na vaga2  
+   }  
+   else //Se não for detectado objeto no sensor 2, mantém o led2 verde aceso  
+   {  
+     digitalWrite(Pinoledverm2, 0);  
+     digitalWrite(Pinoledverde2, 1);  
+     sensor2 = 0; //Marca a vaga 2 como livre  
+
+void oneSensorCycle()  // Ciclo de leitura do sensor  
+  for (uint8_t i = 0; i < SONAR_NUM; i++) 
+   //Se for detectado objeto entre 0 e 50 cm do sensor3, acende o led3 vermelho
+   if (cm[0] > 1 && cm[0] < 50)   
+   {  
+     digitalWrite(Pinoledverm3, 1);  
+     digitalWrite(Pinoledverde3, 0);  
+     sensor3 = 1; //Incrementa o número de vagas ocupadas na vaga3  
+   }  
+   else //Se não for detectado objeto no sensor 3, mantém o led3 verde aceso  
+   {  
+     digitalWrite(Pinoledverm3, 0);  
+     digitalWrite(Pinoledverde3, 1);  
+     sensor3 = 0; //Marca a vaga 3 como livre  
+   }   
+
+void oneSensorCycle()  // Ciclo de leitura do sensor  
+  for (uint8_t i = 0; i < SONAR_NUM; i++) {  
+   //Se for detectado objeto entre 0 e 50 cm do sensor4, acende o led4 vermelho
+   if (cm[0] > 1 && cm[0] < 50)   
+   {  
+     digitalWrite(Pinoledverm4, 1);  
+     digitalWrite(Pinoledverde4, 0);  
+     sensor4 = 1; //Incrementa o número de vagas ocupadas na vaga4  
+   }  
+   else //Se não for detectado objeto no sensor 4, mantém o led4 verde aceso  
+   {  
+     digitalWrite(Pinoledverm4, 0);  
+     digitalWrite(Pinoledverde4, 1);  
+     sensor4 = 0; //Marca a vaga 4 como livre  
+   }   
+   }   
+   //Imprime os valores lidos no monitor serial, para fins de acompanhamento  
+   Serial.print("Sensor : "); 
+   Serial.print(i);   
+   Serial.print(" = ");  
+   Serial.print(cm[i]);  
+   Serial.print(" cm - ");  
+  }  
+  Serial.println();  
+
+}
